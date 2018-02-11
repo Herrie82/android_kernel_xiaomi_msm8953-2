@@ -4133,6 +4133,10 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 		init_te_irq(ctrl_pdata);
 	} else if (ctrl_pdata->status_mode == ESD_BTA)
 		ctrl_pdata->check_status = mdss_dsi_bta_status_check;
+	else if (ctrl_pdata->status_mode == ESD_TE_NT35596) {
+		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
+		init_te_irq(ctrl_pdata);
+	}
 
 	if (ctrl_pdata->status_mode == ESD_MAX) {
 		pr_err("%s: Using default BTA for ESD check\n", __func__);
