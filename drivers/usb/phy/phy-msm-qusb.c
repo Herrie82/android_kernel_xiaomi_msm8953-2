@@ -26,7 +26,7 @@
 #include <linux/usb/msm_hsusb.h>
 
 /* TCSR_PHY_CLK_SCHEME_SEL bit mask */
-#define PHY_CLK_SCHEME_SEL BIT(0)
+#define PHY_CLK_SCHEME_SEL		BIT(0)
 
 #define QUSB2PHY_PLL_PWR_CTL		0x18
 #define REF_BUF_EN			BIT(0)
@@ -43,27 +43,29 @@
 #define IDP_SRC_EN			BIT(3)
 
 #define QUSB2PHY_PORT_QUICKCHARGE2	0x74
-#define QUSB2PHY_PORT_INT_STATUS	0xF0
+#define QUSB2PHY_PORT_INT_STATUS		0xF0
 
-#define QUSB2PHY_PLL_STATUS	0x38
-#define QUSB2PHY_PLL_LOCK	BIT(5)
+#define QUSB2PHY_PLL_STATUS		0x38
+#define QUSB2PHY_PLL_LOCK		BIT(5)
 
-#define QUSB2PHY_PORT_QC1	0x70
-#define VDM_SRC_EN		BIT(4)
-#define VDP_SRC_EN		BIT(2)
+#define QUSB2PHY_PORT_QC1		0x70
+#define VDM_SRC_EN			BIT(4)
+#define VDP_SRC_EN			BIT(2)
 
-#define QUSB2PHY_PORT_QC2	0x74
-#define RDM_UP_EN		BIT(1)
-#define RDP_UP_EN		BIT(3)
-#define RPUM_LOW_EN		BIT(4)
-#define RPUP_LOW_EN		BIT(5)
+#define QUSB2PHY_PORT_QC2		0x74
+#define RDM_UP_EN			BIT(1)
+#define RDP_UP_EN			BIT(3)
+#define RPUM_LOW_EN			BIT(4)
+#define RPUP_LOW_EN			BIT(5)
 
 #define QUSB2PHY_PORT_POWERDOWN		0xB4
 #define CLAMP_N_EN			BIT(5)
 #define FREEZIO_N			BIT(1)
 #define POWER_DOWN			BIT(0)
 
-#define QUSB2PHY_PORT_UTMI_CTRL1	0xC0
+#define QUSB2PHY_PORT_TEST_CTRL		0xB8
+
+#define QUSB2PHY_PORT_UTMI_CTRL1		0xC0
 #define SUSPEND_N			BIT(5)
 #define TERM_SELECT			BIT(4)
 #define XCVR_SELECT_FS			BIT(2)
@@ -76,36 +78,36 @@
 #define QUSB2PHY_PLL_TEST		0x04
 #define CLK_REF_SEL			BIT(7)
 
-#define QUSB2PHY_PORT_TUNE1             0x80
-#define QUSB2PHY_PORT_TUNE2             0x84
-#define QUSB2PHY_PORT_TUNE3             0x88
-#define QUSB2PHY_PORT_TUNE4             0x8C
+#define QUSB2PHY_PORT_TUNE1		0x80
+#define QUSB2PHY_PORT_TUNE2		0x84
+#define QUSB2PHY_PORT_TUNE3		0x88
+#define QUSB2PHY_PORT_TUNE4		0x8C
 
 /* In case Efuse register shows zero, use this value */
 #define TUNE2_DEFAULT_HIGH_NIBBLE	0xB
-#define TUNE2_DEFAULT_LOW_NIBBLE	0x3
+#define TUNE2_DEFAULT_LOW_NIBBLE		0x3
 
 /* Get TUNE2's high nibble value read from efuse */
 #define TUNE2_HIGH_NIBBLE_VAL(val, pos, mask)	((val >> pos) & mask)
 
-#define QUSB2PHY_PORT_INTR_CTRL         0xBC
-#define CHG_DET_INTR_EN                 BIT(4)
-#define DMSE_INTR_HIGH_SEL              BIT(3)
-#define DMSE_INTR_EN                    BIT(2)
-#define DPSE_INTR_HIGH_SEL              BIT(1)
-#define DPSE_INTR_EN                    BIT(0)
+#define QUSB2PHY_PORT_INTR_CTRL		0xBC
+#define CHG_DET_INTR_EN			BIT(4)
+#define DMSE_INTR_HIGH_SEL		BIT(3)
+#define DMSE_INTR_EN			BIT(2)
+#define DPSE_INTR_HIGH_SEL		BIT(1)
+#define DPSE_INTR_EN			BIT(0)
 
 #define QUSB2PHY_PORT_UTMI_STATUS	0xF4
 #define LINESTATE_DP			BIT(0)
 #define LINESTATE_DM			BIT(1)
 
 #define HS_PHY_CTRL_REG			0x10
-#define UTMI_OTG_VBUS_VALID             BIT(20)
-#define SW_SESSVLD_SEL                  BIT(28)
+#define UTMI_OTG_VBUS_VALID		BIT(20)
+#define SW_SESSVLD_SEL			BIT(28)
 
-#define QUSB2PHY_1P8_VOL_MIN           1800000 /* uV */
-#define QUSB2PHY_1P8_VOL_MAX           1800000 /* uV */
-#define QUSB2PHY_1P8_HPM_LOAD          30000   /* uA */
+#define QUSB2PHY_1P8_VOL_MIN		1800000 /* uV */
+#define QUSB2PHY_1P8_VOL_MAX		1800000 /* uV */
+#define QUSB2PHY_1P8_HPM_LOAD		30000   /* uA */
 
 #define QUSB2PHY_3P3_VOL_MIN		3075000 /* uV */
 #define QUSB2PHY_3P3_VOL_MAX		3200000 /* uV */
@@ -864,7 +866,79 @@ static void qusb_phy_shutdown(struct usb_phy *phy)
 	wmb();
 
 	qusb_phy_enable_clocks(qphy, false);
+	qusb_phy_enable_power(qphy, false);
 }
+
+int qusb_phy_dumpreg(struct usb_phy *phy)
+{
+	struct qusb_phy *qphy = container_of(phy, struct qusb_phy, phy);
+	pr_debug("%s:dump_phy_registers\n", __func__);
+	pr_debug("PORT_PWRDWN:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PORT_POWERDOWN));
+	pr_debug("UTMCTL1:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PORT_UTMI_CTRL1));
+	pr_debug("UTMCTL2:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PORT_UTMI_CTRL2));
+	pr_debug("AUTOPGM_CTL1:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PLL_AUTOPGM_CTL1));
+	pr_debug("PORT_PWRDWN:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PLL_PWR_CTL));
+	pr_debug("linestate:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PORT_UTMI_STATUS));
+	pr_debug("!!\n!!INT_STATUS:%08x\n", readl_relaxed(qphy->base + QUSB2PHY_PORT_INT_STATUS));
+	return 0;
+}
+
+int qusb_phy_run_dcd(struct usb_phy *phy)
+{
+	struct qusb_phy *qphy = container_of(phy, struct qusb_phy, phy);
+
+	u8 int_status;
+
+	writel_relaxed(0x23, qphy->base + QUSB2PHY_PORT_POWERDOWN);
+/*23*/
+
+	writel_relaxed(0x35, qphy->base + QUSB2PHY_PORT_UTMI_CTRL1);
+
+	writel_relaxed(0xC0, qphy->base + QUSB2PHY_PORT_UTMI_CTRL2);
+	writel_relaxed(0x05, qphy->base + QUSB2PHY_PLL_AUTOPGM_CTL1);
+
+	writel_relaxed(0x22, qphy->base + QUSB2PHY_PORT_POWERDOWN);
+/*22*/
+
+	writel_relaxed(0x17, qphy->base + QUSB2PHY_PLL_PWR_CTL);
+	usleep_range(5, 1000);
+	writel_relaxed(0x15, qphy->base + QUSB2PHY_PLL_AUTOPGM_CTL1);
+
+	usleep_range(50, 1000);
+
+	writel_relaxed(0x09,
+	qphy->base + QUSB2PHY_PORT_QUICKCHARGE2);
+
+	writel_relaxed(0x00, qphy->base + QUSB2PHY_PORT_QUICKCHARGE1);
+
+	writel_relaxed(0x00, qphy->base + QUSB2PHY_PORT_QUICKCHARGE2);
+
+	writel_relaxed(0x1F, qphy->base + QUSB2PHY_PORT_INTR_CTRL);
+
+	writel_relaxed(0x08, qphy->base + QUSB2PHY_PORT_QUICKCHARGE1);
+
+	usleep_range(1000, 2000);
+	int_status = readl_relaxed(qphy->base + QUSB2PHY_PORT_INT_STATUS);
+
+	qusb_phy_dumpreg(phy);
+
+	writel_relaxed(CLAMP_N_EN | FREEZIO_N | POWER_DOWN, qphy->base + QUSB2PHY_PORT_POWERDOWN);
+/*23 */
+
+	writel_relaxed(0x95, qphy->base + QUSB2PHY_PLL_AUTOPGM_CTL1);
+
+	writel_relaxed(0x80, qphy->base + QUSB2PHY_PORT_UTMI_CTRL2);
+
+	writel_relaxed(0x10, qphy->base + QUSB2PHY_PORT_UTMI_CTRL1);
+
+	writel_relaxed(CLAMP_N_EN | FREEZIO_N, qphy->base + QUSB2PHY_PORT_POWERDOWN);
+
+	int_status = int_status & 0x5;
+	pr_debug("%s: int_status:%x\n", __func__, int_status);
+
+	return int_status;
+}
+EXPORT_SYMBOL(qusb_phy_run_dcd);
 
 /**
  * Returns DP/DM linestate with Idp_src enabled to detect if lines are floating
