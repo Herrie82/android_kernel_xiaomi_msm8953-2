@@ -1203,6 +1203,27 @@ int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	return ret;
 }
 
+extern u32 te_count;
+static u32 te_count_old = 1;
+
+int mdss_dsi_TE_NT35596_check (struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	int ret = 1;
+
+	if (te_count_old != te_count) {
+
+		te_count_old = te_count;
+	} else {
+		ret = 0;
+		pr_err("liujia te_count doesnt add as time");
+	}
+	if (te_count >= 10000)
+		te_count = 0;
+
+	return ret;
+
+}
+
 void mdss_dsi_dsc_config(struct mdss_dsi_ctrl_pdata *ctrl, struct dsc_desc *dsc)
 {
 	u32 data, offset;
@@ -2320,7 +2341,8 @@ void mdss_dsi_wait4video_done(struct mdss_dsi_ctrl_pdata *ctrl)
 
 	/* DSI_INTL_CTRL */
 	data = MIPI_INP((ctrl->ctrl_base) + 0x0110);
-	data &= DSI_INTR_TOTAL_MASK;
+	/* clear previous VIDEO_DONE interrupt as well */
+	data &= (DSI_INTR_TOTAL_MASK | DSI_INTR_VIDEO_DONE);
 	data |= DSI_INTR_VIDEO_DONE_MASK;
 
 	MIPI_OUTP((ctrl->ctrl_base) + 0x0110, data);
