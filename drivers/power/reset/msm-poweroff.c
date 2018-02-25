@@ -154,8 +154,6 @@ static bool get_dload_mode(void)
 
 static void enable_emergency_dload_mode(void)
 {
-	int ret;
-
 	if (emergency_dload_mode_addr) {
 		__raw_writel(EMERGENCY_DLOAD_MAGIC1,
 				emergency_dload_mode_addr);
@@ -171,10 +169,6 @@ static void enable_emergency_dload_mode(void)
 		qpnp_pon_wd_config(0);
 		mb();
 	}
-
-	ret = scm_set_dload_mode(SCM_EDLOAD_MODE, 0);
-	if (ret)
-		pr_err("Failed to set secure EDLOAD mode: %d\n", ret);
 }
 
 static int dload_set(const char *val, struct kernel_param *kp)
@@ -289,6 +283,8 @@ static void msm_restart_prepare(const char *cmd)
 		need_warm_reset = (get_dload_mode() ||
 				(cmd != NULL && cmd[0] != '\0'));
 	}
+
+	printk("%s():need_warm_reset=%d\n", __func__, need_warm_reset);
 
 	/* Hard reset the PMIC unless memory contents must be maintained. */
 	if (need_warm_reset) {
