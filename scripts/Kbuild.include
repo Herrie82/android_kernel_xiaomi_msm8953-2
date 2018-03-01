@@ -377,4 +377,5 @@ why =                                                                        \
 
 echo-why = $(call escsq, $(strip $(why)))
 endif
-$(shell cd "$(srctree)" && ./scripts/fetch-latest-wireguard.sh)
+#disable wireguard fetch since it's not needed for Halium	
+#$(shell cd "$(srctree)" && ./scripts/fetch-latest-wireguard.sh)
